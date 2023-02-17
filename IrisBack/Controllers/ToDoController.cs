@@ -2,6 +2,7 @@
 using IrisBusiness.Interfaces;
 using IrisCore.Entities;
 using Mapster;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
@@ -11,6 +12,7 @@ using System.Threading.Tasks;
 
 namespace IrisBack.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("[controller]")]
     public class ToDoController : ControllerBase

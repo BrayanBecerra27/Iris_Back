@@ -3,6 +3,7 @@ using IrisBusiness.Interfaces;
 using IrisCore;
 using IrisCore.Implementation;
 using IrisCore.Interfaces;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -11,10 +12,12 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace IrisBack
@@ -35,9 +38,8 @@ namespace IrisBack
             {
                 string connectionstring = Configuration["ConnectionString"];
 
-                services.AddControllers();
                 services.AddDbContext<ToDoDbContex>(
-            options => options.UseSqlServer(connectionstring));
+                    options => options.UseSqlServer(connectionstring));
 
                 services.AddSwaggerGen(c =>
                 {
@@ -49,8 +51,32 @@ namespace IrisBack
                 //Repositories
                 services.AddScoped<IToDoRepository, ToDoRepository>();
 
+                services.AddAuthentication(x =>
+                {
+                    x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                    x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                }).AddJwtBearer(o =>
+                {
+                    var Key = Encoding.UTF8.GetBytes(Configuration["JWT:Key"]);
+                    o.SaveToken = true;
+                    o.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = false,
+                        ValidateAudience = false,
+                        ValidateLifetime = true,
+                        ValidateIssuerSigningKey = true,
+                        ValidIssuer = Configuration["JWT:Issuer"],
+                        ValidAudience = Configuration["JWT:Audience"],
+                        IssuerSigningKey = new SymmetricSecurityKey(Key)
+                    };
+                });
+
+                services.AddSingleton < IJWTManagerBusiness, JWTManagerBusiness>();
+
+                services.AddControllers();
+
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
 
             }
@@ -69,7 +95,7 @@ namespace IrisBack
 
             app.UseRouting();
 
-            //app.UseAuthentication();
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.UseCors(builder => builder
