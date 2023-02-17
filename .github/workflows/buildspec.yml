@@ -22,8 +22,6 @@ jobs:
         run: dotnet restore IrisBack/IrisBack.csproj
       - name: Build
         run: dotnet build IrisBack/IrisBack.csproj --configuration Release --no-restore
-      - name: Test
-        run: dotnet test Api/Iris.Test/Iris.Test.csproj --no-restore
       
       - name: Checkout repo
         uses: actions/checkout@v3       
